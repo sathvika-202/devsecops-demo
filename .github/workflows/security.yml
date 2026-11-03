@@ -1,0 +1,41 @@
+name: DevSecOps Pipeline
+on: push
+
+jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan for secrets (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  check-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Scan code (Semgrep)
+        run: |
+          pip install semgrep
+          semgrep scan --config auto --error app.py
+
+
+  check-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan libraries and Dockerfile (Trivy)
+        run: |
+          docker run --rm -v "$PWD":/project aquasec/trivy:latest fs \
+            --scanners vuln,misconfig \
+            --severity HIGH,CRITICAL \
+            --exit-code 1 \
+            /project
+
+
