@@ -3,6 +3,8 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
+API_KEY = "AKIAZXCVBNMLKJHG2345" 
+
 @app.route("/user")
 def get_user():
     name = request.args.get("name")
